@@ -1,4 +1,4 @@
-import db_connector/db_postgres, parseopt, std/terminal, procs
+import db_connector/db_postgres, parseopt, std/terminal, procs, strformat
 
 var
   database = ""
@@ -6,6 +6,7 @@ var
   password = readPasswordFromStdin("Enter the password: ")
   activeFlag = false
   replaceFlag = false
+  tableFlag = false
   argCount = 0
 
 let getActiveDatabases = sql"SELECT DISTINCT datname FROM pg_stat_activity;"
@@ -20,6 +21,8 @@ for kind, key, val in p.getopt():
     activeFlag = true
   elif kind == cmdLongOption and key == "replace":
     replaceFlag = true
+  elif kind == cmdLongOption and key == "table":
+    tableFlag = true
   inc argCount
 
 # echo "User: ", user
@@ -34,6 +37,17 @@ if database != "" and user != "":
 
   if replaceFlag:
     replaceTable(conn)
+
+  if tableFlag:
+    echo "Enter the name of the table you want to look at:"
+    let tableName = readLine(stdin)
+    try:
+      let query = "SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name = '" & tableName & "';"
+      echo "--------------------------------------------------------------"
+      for row in conn.fastRows(sql(query)):
+        echo fmt"{row[0]} ({row[1]})"
+    except Exception:
+      echo "An error occurred while looking at the table. ", getCurrentExceptionMsg()
   
   if argCount == 2:
     for row in conn.fastRows(sql"SELECT tablename FROM pg_tables WHERE schemaname = 'public';"):
