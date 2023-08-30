@@ -3,10 +3,10 @@ import db_connector/db_postgres, parseopt, std/terminal, procs
 var
   database = ""
   user = ""
-  password = readPasswordFromStdin("Enter the password: ")
   activeFlag = false
   replaceFlag = false
   tableFlag = false
+  helpFlag = false
   argCount = 0
 
 let getActiveDatabases = sql"SELECT DISTINCT datname FROM pg_stat_activity;"
@@ -23,10 +23,18 @@ for kind, key, val in p.getopt():
     replaceFlag = true
   elif kind == cmdLongOption and key == "table":
     tableFlag = true
+  elif kind == cmdLongOption and key == "help":
+    helpFlag = true
   inc argCount
 
+if argcount == 1 and helpFlag:
+  echo "Usage: [username] -d:[databasename] [options]"
 
-if database != "" and user != "":
+
+elif database != "" and user != "":
+
+
+  var password = readPasswordFromStdin("Enter the password: ")
   let conn = open("localhost", user, password, database)
 
   if activeFlag:
