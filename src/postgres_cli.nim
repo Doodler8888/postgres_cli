@@ -1,4 +1,4 @@
-import db_connector/db_postgres, parseopt, std/terminal, procs, strformat
+import db_connector/db_postgres, parseopt, std/terminal, procs
 
 var
   database = ""
@@ -25,8 +25,6 @@ for kind, key, val in p.getopt():
     tableFlag = true
   inc argCount
 
-# echo "User: ", user
-# echo "Database: ", database
 
 if database != "" and user != "":
   let conn = open("localhost", user, password, database)
@@ -39,21 +37,12 @@ if database != "" and user != "":
     replaceTable(conn)
 
   if tableFlag:
-    echo "Enter the name of the table you want to look at:"
-    let tableName = readLine(stdin)
-    try:
-      let query = "SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name = '" & tableName & "';"
-      echo "--------------------------------------------------------------"
-      for row in conn.fastRows(sql(query)):
-        echo fmt"{row[0]} ({row[1]})"
-    except Exception:
-      echo "An error occurred while looking at the table. ", getCurrentExceptionMsg()
+    showTable(conn)
   
   if argCount == 2:
     for row in conn.fastRows(sql"SELECT tablename FROM pg_tables WHERE schemaname = 'public';"):
       echo row[0]
 
-  # close the connection
   conn.close()
 else:
   echo "Missing necessary information to connect to the database."
